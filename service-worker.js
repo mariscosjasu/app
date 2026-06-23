@@ -1,7 +1,7 @@
 /* Service Worker — El sazón de JASU
    Cachea la app para que funcione 100% offline. */
 
-const CACHE = 'jasu-cache-v1';
+const CACHE = 'jasu-cache-v2';
 const ASSETS = [
   './',
   './index.html',
@@ -13,6 +13,8 @@ const ASSETS = [
   './js/inventory.js',
   './js/sections.js',
   './js/tips.js',
+  './js/lock.js',
+  './js/settings.js',
   './js/app.js',
   './icons/icon.svg'
 ];

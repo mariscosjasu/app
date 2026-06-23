@@ -367,3 +367,85 @@ body {
 
 /* Mejor área táctil en general */
 button { touch-action: manipulation; }
+
+
+/* ============================================================
+   Configuración, bloqueo y controles añadidos
+   ============================================================ */
+
+/* ---------- Botones de ícono en secciones ---------- */
+.dyn-icon-btn {
+  background: none; border: none; cursor: pointer; font-size: 15px; color: var(--text-soft);
+  padding: 4px 6px; border-radius: 8px; line-height: 1;
+}
+.dyn-icon-btn:hover { background: rgba(0,0,0,.05); }
+.dyn-icon-btn:disabled { opacity: .3; cursor: default; }
+.dyn-li-edit { background: none; border: none; color: var(--text-soft); cursor: pointer; font-size: 14px; padding: 2px 4px; }
+
+/* ---------- Tarjetas de configuración ---------- */
+.settings-card { padding: 16px; }
+.settings-title { font-size: 16px; margin-bottom: 4px; }
+.settings-hint { font-size: 13px; color: var(--text-soft); margin-bottom: 12px; line-height: 1.4; }
+.inline-row { display: flex; gap: 8px; }
+.inline-row input { flex: 1; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); font-size: 15px; font-family: var(--font); min-width: 0; }
+.settings-actions { display: flex; gap: 10px; margin: 10px 0; flex-wrap: wrap; }
+.settings-actions .btn { flex: 1; }
+.settings-actions-col { display: flex; flex-direction: column; gap: 10px; }
+.danger-text { color: var(--red); }
+
+/* ---------- Fila de módulo / sección ---------- */
+.module-row {
+  display: flex; align-items: center; gap: 8px; padding: 8px 0;
+  border-top: 1px solid var(--line);
+}
+.module-row:first-of-type { border-top: none; }
+.module-order { display: flex; flex-direction: column; }
+.module-order .dyn-icon-btn { font-size: 11px; padding: 1px 4px; }
+.module-emoji { font-size: 20px; width: 26px; text-align: center; }
+.module-name { flex: 1; padding: 9px 10px; border-radius: 10px; border: 1px solid var(--line); font-size: 14px; font-family: var(--font); min-width: 0; }
+.module-name-static { flex: 1; font-size: 14px; font-weight: 600; }
+
+/* ---------- Interruptor (switch) ---------- */
+.switch { position: relative; display: inline-block; width: 48px; height: 28px; flex: 0 0 auto; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider {
+  position: absolute; inset: 0; cursor: pointer; background: #cfcac4; border-radius: 999px; transition: .2s;
+}
+.slider::before {
+  content: ''; position: absolute; height: 22px; width: 22px; left: 3px; top: 3px;
+  background: #fff; border-radius: 50%; transition: .2s; box-shadow: 0 1px 3px rgba(0,0,0,.25);
+}
+.switch input:checked + .slider { background: var(--green); }
+.switch input:checked + .slider::before { transform: translateX(20px); }
+.switch input:disabled + .slider { opacity: .5; }
+
+/* ---------- Seguridad ---------- */
+.lock-status { font-weight: 700; padding: 10px 12px; border-radius: 12px; margin-bottom: 10px; }
+.lock-status.ok { background: var(--green-soft); color: var(--green); }
+.bio-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+
+/* ---------- Pantalla de bloqueo ---------- */
+.lock-screen {
+  position: fixed; inset: 0; z-index: 100;
+  background: linear-gradient(160deg, var(--orange-soft), #fff);
+  display: flex; align-items: center; justify-content: center; padding: 24px;
+  padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);
+}
+body.locked { overflow: hidden; }
+.lock-box {
+  width: 100%; max-width: 360px; background: #fff; border-radius: 24px; padding: 30px 24px;
+  box-shadow: var(--shadow-lg); text-align: center;
+}
+.lock-logo { border-radius: 16px; background: var(--orange-soft); padding: 6px; }
+.lock-title { font-size: 20px; margin: 12px 0 2px; }
+.lock-sub { color: var(--text-soft); font-size: 14px; margin-bottom: 20px; }
+.lock-bio { margin-bottom: 14px; }
+.lock-pin-area { display: flex; flex-direction: column; gap: 12px; }
+.lock-pin-label { font-size: 13px; color: var(--text-soft); text-align: left; }
+.lock-pin-input {
+  text-align: center; font-size: 26px; letter-spacing: 10px; padding: 14px;
+  border-radius: 14px; border: 1px solid var(--line); font-family: var(--font);
+}
+.lock-pin-input:focus { outline: none; border-color: var(--orange-light); box-shadow: 0 0 0 3px rgba(251,146,60,.15); }
+.lock-error { color: var(--red); font-size: 13px; }
+.lock-alt { background: none; border: none; color: var(--orange); font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 16px; }

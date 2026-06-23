@@ -11,7 +11,20 @@ const DB = (() => {
     transactions: PREFIX + 'transactions',
     ingredients: PREFIX + 'ingredients',
     sections: PREFIX + 'sections',
+    settings: PREFIX + 'settings',
     seeded: PREFIX + 'seeded'
+  };
+
+  // Configuración por defecto (módulos, negocio y seguridad)
+  const DEFAULT_SETTINGS = {
+    businessName: 'El sazón de JASU',
+    modules: [
+      { key: 'finance', label: 'Finanzas', visible: true },
+      { key: 'inventory', label: 'Inventario', visible: true },
+      { key: 'sections', label: 'Secciones', visible: true },
+      { key: 'tips', label: 'Consejos', visible: true }
+    ],
+    security: { pinHash: null, biometric: false, credentialId: null }
   };
 
   /* ---------- Lectura / escritura genérica ---------- */
@@ -157,6 +170,72 @@ const DB = (() => {
       if (!sec) return;
       sec.items = sec.items.filter((i) => i.id !== itemId);
       write(KEYS.sections, list);
+    },
+    update(id, patch) {
+      const list = read(KEYS.sections, []);
+      const sec = list.find((s) => s.id === id);
+      if (!sec) return;
+      if (patch.title !== undefined) sec.title = String(patch.title).trim();
+      if (patch.emoji !== undefined) sec.emoji = patch.emoji;
+      write(KEYS.sections, list);
+    },
+    move(id, dir) {
+      const list = read(KEYS.sections, []);
+      const idx = list.findIndex((s) => s.id === id);
+      if (idx === -1) return;
+      const ni = idx + dir;
+      if (ni < 0 || ni >= list.length) return;
+      [list[idx], list[ni]] = [list[ni], list[idx]];
+      write(KEYS.sections, list);
+    },
+    editItem(sectionId, itemId, text) {
+      const list = read(KEYS.sections, []);
+      const sec = list.find((s) => s.id === sectionId);
+      if (!sec) return;
+      const it = sec.items.find((i) => i.id === itemId);
+      if (it) it.text = String(text).trim();
+      write(KEYS.sections, list);
+    }
+  };
+
+  /* ===================== CONFIGURACIÓN ===================== */
+  const settings = {
+    get() {
+      const base = JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
+      const saved = read(KEYS.settings, null);
+      if (!saved) return base;
+      const merged = { ...base, ...saved };
+      merged.security = { ...base.security, ...(saved.security || {}) };
+      // Conservar el orden guardado y agregar módulos nuevos que no existieran
+      const known = base.modules;
+      const savedMods = Array.isArray(saved.modules) ? saved.modules : [];
+      const result = [];
+      savedMods.forEach((m) => {
+        const def = known.find((k) => k.key === m.key);
+        if (def) result.push({ ...def, ...m });
+      });
+      known.forEach((k) => {
+        if (!result.find((r) => r.key === k.key)) result.push({ ...k });
+      });
+      merged.modules = result;
+      return merged;
+    },
+    set(patch) {
+      const next = { ...settings.get(), ...patch };
+      write(KEYS.settings, next);
+      return next;
+    },
+    setModules(modules) {
+      const cur = settings.get();
+      cur.modules = modules;
+      write(KEYS.settings, cur);
+      return cur;
+    },
+    setSecurity(patch) {
+      const cur = settings.get();
+      cur.security = { ...cur.security, ...patch };
+      write(KEYS.settings, cur);
+      return cur;
     }
   };
 
@@ -192,12 +271,31 @@ const DB = (() => {
   /* ---------- Exportar / importar respaldo ---------- */
   function exportAll() {
     return JSON.stringify({
+      app: 'El sazón de JASU',
+      version: 1,
       transactions: read(KEYS.transactions, []),
       ingredients: read(KEYS.ingredients, []),
       sections: read(KEYS.sections, []),
+      settings: read(KEYS.settings, null),
       exportedAt: Date.now()
     }, null, 2);
   }
 
-  return { KEYS, uid, transactions, ingredients, sections, seedIfEmpty, exportAll };
+  function importAll(jsonStr) {
+    const data = JSON.parse(jsonStr);
+    if (typeof data !== 'object' || data === null) throw new Error('Archivo inválido');
+    if (Array.isArray(data.transactions)) write(KEYS.transactions, data.transactions);
+    if (Array.isArray(data.ingredients)) write(KEYS.ingredients, data.ingredients);
+    if (Array.isArray(data.sections)) write(KEYS.sections, data.sections);
+    if (data.settings && typeof data.settings === 'object') write(KEYS.settings, data.settings);
+    write(KEYS.seeded, true);
+    return true;
+  }
+
+  function resetAll() {
+    [KEYS.transactions, KEYS.ingredients, KEYS.sections, KEYS.settings, KEYS.seeded]
+      .forEach((k) => localStorage.removeItem(k));
+  }
+
+  return { KEYS, uid, transactions, ingredients, sections, settings, seedIfEmpty, exportAll, importAll, resetAll };
 })();

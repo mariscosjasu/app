@@ -67,7 +67,7 @@
 
     <!-- ---------- FINANZAS ---------- -->
     <section class="view" id="view-finance" data-view="finance">
-      <h2 class="view-title">💰 Registro Financiero</h2>
+      <h2 class="view-title" id="title-finance">💰 Registro Financiero</h2>
 
       <div class="balance-board">
         <div class="bal-item in">
@@ -104,7 +104,7 @@
 
     <!-- ---------- INVENTARIO ---------- -->
     <section class="view" id="view-inventory" data-view="inventory">
-      <h2 class="view-title">📦 Inventario de Ingredientes</h2>
+      <h2 class="view-title" id="title-inventory">📦 Inventario de Ingredientes</h2>
 
       <div class="inv-summary" id="invSummary"></div>
 
@@ -115,7 +115,7 @@
 
     <!-- ---------- SECCIONES DINÁMICAS ---------- -->
     <section class="view" id="view-sections" data-view="sections">
-      <h2 class="view-title">🗂️ Mis Secciones</h2>
+      <h2 class="view-title" id="title-sections">🗂️ Mis Secciones</h2>
       <p class="view-hint">Crea listas personalizadas: pendientes por comprar, recordatorios, tareas del negocio…</p>
 
       <button class="btn btn-primary full" id="openSectionForm">+ Nueva sección</button>
@@ -125,7 +125,7 @@
 
     <!-- ---------- CONSEJOS ---------- -->
     <section class="view" id="view-tips" data-view="tips">
-      <h2 class="view-title">💡 Consejos Inteligentes</h2>
+      <h2 class="view-title" id="title-tips">💡 Consejos Inteligentes</h2>
 
       <div class="tips-filter" id="tipsFilter"></div>
 
@@ -134,16 +134,19 @@
       <button class="btn btn-primary full" id="shuffleTips">🔀 Mostrar otros consejos</button>
     </section>
 
+    <!-- ---------- CONFIGURACIÓN ---------- -->
+    <section class="view" id="view-settings" data-view="settings">
+      <h2 class="view-title">⚙️ Configuración</h2>
+      <div id="settingsContent"></div>
+    </section>
+
   </main>
 
-  <!-- ===== Navegación inferior ===== -->
-  <nav class="bottom-nav">
-    <button class="nav-btn active" data-goto="home"><span>🏠</span><small>Inicio</small></button>
-    <button class="nav-btn" data-goto="finance"><span>💰</span><small>Finanzas</small></button>
-    <button class="nav-btn" data-goto="inventory"><span>📦</span><small>Inventario</small></button>
-    <button class="nav-btn" data-goto="sections"><span>🗂️</span><small>Secciones</small></button>
-    <button class="nav-btn" data-goto="tips"><span>💡</span><small>Consejos</small></button>
-  </nav>
+  <!-- ===== Navegación inferior (se genera dinámicamente) ===== -->
+  <nav class="bottom-nav" id="bottomNav"></nav>
+
+  <!-- ===== Pantalla de bloqueo ===== -->
+  <div class="lock-screen" id="lockScreen" hidden></div>
 
   <!-- ===== Modal genérico ===== -->
   <div class="modal-overlay" id="modalOverlay" hidden>
@@ -166,6 +169,8 @@
   <script src="js/inventory.js"></script>
   <script src="js/sections.js"></script>
   <script src="js/tips.js"></script>
+  <script src="js/lock.js"></script>
+  <script src="js/settings.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

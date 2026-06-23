@@ -48,7 +48,48 @@ const App = (() => {
     if (view === 'inventory') Inventory.render();
     if (view === 'sections') Sections.render();
     if (view === 'tips') Tips.render();
+    if (view === 'settings') Settings.render();
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /* ---------- Barra de navegación dinámica ---------- */
+  const NAV_ICONS = { home: '🏠', finance: '💰', inventory: '📦', sections: '🗂️', tips: '💡', settings: '⚙️' };
+
+  function renderNav() {
+    const nav = document.getElementById('bottomNav');
+    if (!nav) return;
+    const s = DB.settings.get();
+    const items = [{ key: 'home', label: 'Inicio' }];
+    s.modules.forEach((m) => { if (m.visible) items.push({ key: m.key, label: m.label }); });
+    items.push({ key: 'settings', label: 'Ajustes' });
+
+    nav.innerHTML = items.map((it) => `
+      <button class="nav-btn ${it.key === currentView ? 'active' : ''}" data-goto="${it.key}">
+        <span>${NAV_ICONS[it.key] || '•'}</span><small>${Finance.escapeHtml(it.label)}</small>
+      </button>`).join('');
+
+    nav.querySelectorAll('[data-goto]').forEach((b) => {
+      b.onclick = () => goto(b.dataset.goto);
+    });
+  }
+
+  /* ---------- Aplicar marca y nombres personalizados ---------- */
+  function applyBranding() {
+    const s = DB.settings.get();
+    const name = s.businessName || 'El sazón de JASU';
+    const h1 = document.querySelector('.brand-text h1');
+    if (h1) h1.textContent = name;
+    document.title = name;
+    // Nombres de los módulos en los títulos de cada vista
+    s.modules.forEach((m) => {
+      const el = document.getElementById('title-' + m.key);
+      if (el) el.textContent = `${NAV_ICONS[m.key] || ''} ${m.label}`.trim();
+    });
+    renderNav();
+  }
+
+  function afterUnlock() {
+    renderHome();
   }
 
   /* ---------- Pantalla de inicio (resumen) ---------- */
@@ -57,6 +98,14 @@ const App = (() => {
     const h = new Date().getHours();
     const saludo = h < 12 ? '¡Buenos días!' : h < 19 ? '¡Buenas tardes!' : '¡Buenas noches!';
     document.getElementById('heroGreeting').textContent = saludo + ' 👋';
+
+    // Ocultar atajos de módulos que estén desactivados
+    const vis = {};
+    DB.settings.get().modules.forEach((m) => { vis[m.key] = m.visible; });
+    document.querySelectorAll('.quick-tile[data-goto]').forEach((t) => {
+      const k = t.dataset.goto;
+      if (k in vis) t.hidden = !vis[k];
+    });
 
     // Resumen financiero de hoy
     const t = Finance.todaySummary();
@@ -133,11 +182,10 @@ const App = (() => {
   function start() {
     DB.seedIfEmpty();
 
-    // Navegación inferior + atajos de inicio
-    document.querySelectorAll('[data-goto]').forEach((btn) => {
+    // Atajos rápidos de la pantalla de inicio
+    document.querySelectorAll('.quick-tile[data-goto]').forEach((btn) => {
       btn.addEventListener('click', () => {
         goto(btn.dataset.goto);
-        // Atajos rápidos desde el inicio
         const action = btn.dataset.action;
         if (action === 'quick-income') setTimeout(() => Finance.openForm('income'), 60);
         if (action === 'quick-expense') setTimeout(() => Finance.openForm('expense'), 60);
@@ -158,15 +206,21 @@ const App = (() => {
     Inventory.init();
     Sections.init();
     Tips.init();
+    Settings.init();
+    Lock.init();
 
     setTodayLabel();
+    applyBranding();   // genera la barra de navegación y aplica el nombre
     setupPWA();
 
     // Render inicial
     goto('home');
+
+    // Bloqueo: si hay PIN configurado, mostrar pantalla de bloqueo
+    if (Lock.isEnabled()) Lock.show();
   }
 
-  return { start, goto, openModal, closeModal, toast, money, refresh, renderHome };
+  return { start, goto, openModal, closeModal, toast, money, refresh, renderHome, renderNav, applyBranding, afterUnlock };
 })();
 
 document.addEventListener('DOMContentLoaded', App.start);
