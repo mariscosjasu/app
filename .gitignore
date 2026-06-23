@@ -1,0 +1,13 @@
+# Dependencias (no se usan en producción; solo para pruebas locales)
+node_modules/
+package-lock.json
+package.json
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Temporales
+*.log
+_test.js
+_dom_test.js

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#e8590c" />
+  <meta name="description" content="App de gestión local para El sazón de JASU: finanzas, inventario, recordatorios y consejos." />
+  <title>El sazón de JASU</title>
+
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="icons/icon.svg" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="El sazón de JASU" />
+
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- ===== Encabezado ===== -->
+  <header class="app-header">
+    <div class="brand">
+      <img class="brand-logo" src="icons/icon.svg" alt="Logo El sazón de JASU" width="40" height="40" />
+      <div class="brand-text">
+        <h1>El sazón de JASU</h1>
+        <span class="brand-sub" id="todayLabel"></span>
+      </div>
+    </div>
+    <button class="icon-btn" id="installBtn" title="Instalar app" hidden>⬇️ Instalar</button>
+  </header>
+
+  <!-- ===== Contenido por vistas ===== -->
+  <main class="app-main">
+
+    <!-- ---------- INICIO / RESUMEN ---------- -->
+    <section class="view active" id="view-home" data-view="home">
+      <div class="hero-card">
+        <p class="hero-greeting" id="heroGreeting">¡Hola! 👋</p>
+        <p class="hero-balance-label">Ganancia neta de hoy</p>
+        <p class="hero-balance" id="heroBalanceToday">$0.00</p>
+        <div class="hero-mini">
+          <div><span class="dot in"></span> Ingresos hoy: <strong id="heroIncomeToday">$0.00</strong></div>
+          <div><span class="dot out"></span> Gastos hoy: <strong id="heroExpenseToday">$0.00</strong></div>
+        </div>
+      </div>
+
+      <div class="quick-grid">
+        <button class="quick-tile income" data-goto="finance" data-action="quick-income">
+          <span class="qt-icon">💵</span><span class="qt-text">Registrar venta</span>
+        </button>
+        <button class="quick-tile expense" data-goto="finance" data-action="quick-expense">
+          <span class="qt-icon">🧾</span><span class="qt-text">Registrar gasto</span>
+        </button>
+        <button class="quick-tile inventory" data-goto="inventory">
+          <span class="qt-icon">📦</span><span class="qt-text">Inventario</span>
+        </button>
+        <button class="quick-tile tips" data-goto="tips">
+          <span class="qt-icon">💡</span><span class="qt-text">Consejo del día</span>
+        </button>
+      </div>
+
+      <div class="home-alerts" id="homeAlerts"></div>
+
+      <div class="card tip-of-day" id="tipOfDay"></div>
+    </section>
+
+    <!-- ---------- FINANZAS ---------- -->
+    <section class="view" id="view-finance" data-view="finance">
+      <h2 class="view-title">💰 Registro Financiero</h2>
+
+      <div class="balance-board">
+        <div class="bal-item in">
+          <span class="bal-label">Ingresos</span>
+          <span class="bal-value" id="balIncome">$0.00</span>
+        </div>
+        <div class="bal-item out">
+          <span class="bal-label">Gastos</span>
+          <span class="bal-value" id="balExpense">$0.00</span>
+        </div>
+        <div class="bal-item net">
+          <span class="bal-label">Ganancia neta</span>
+          <span class="bal-value" id="balNet">$0.00</span>
+        </div>
+      </div>
+
+      <div class="filter-row">
+        <label for="financeFilter">Periodo:</label>
+        <select id="financeFilter">
+          <option value="today">Hoy</option>
+          <option value="week">Esta semana</option>
+          <option value="month">Este mes</option>
+          <option value="all">Todo</option>
+        </select>
+      </div>
+
+      <div class="dual-btns">
+        <button class="btn btn-income" id="openIncomeForm">+ Venta (entrada)</button>
+        <button class="btn btn-expense" id="openExpenseForm">+ Gasto (salida)</button>
+      </div>
+
+      <ul class="tx-list" id="txList"></ul>
+    </section>
+
+    <!-- ---------- INVENTARIO ---------- -->
+    <section class="view" id="view-inventory" data-view="inventory">
+      <h2 class="view-title">📦 Inventario de Ingredientes</h2>
+
+      <div class="inv-summary" id="invSummary"></div>
+
+      <button class="btn btn-primary full" id="openIngredientForm">+ Agregar ingrediente</button>
+
+      <div class="inv-grid" id="invGrid"></div>
+    </section>
+
+    <!-- ---------- SECCIONES DINÁMICAS ---------- -->
+    <section class="view" id="view-sections" data-view="sections">
+      <h2 class="view-title">🗂️ Mis Secciones</h2>
+      <p class="view-hint">Crea listas personalizadas: pendientes por comprar, recordatorios, tareas del negocio…</p>
+
+      <button class="btn btn-primary full" id="openSectionForm">+ Nueva sección</button>
+
+      <div class="sections-wrap" id="sectionsWrap"></div>
+    </section>
+
+    <!-- ---------- CONSEJOS ---------- -->
+    <section class="view" id="view-tips" data-view="tips">
+      <h2 class="view-title">💡 Consejos Inteligentes</h2>
+
+      <div class="tips-filter" id="tipsFilter"></div>
+
+      <div class="tips-feed" id="tipsFeed"></div>
+
+      <button class="btn btn-primary full" id="shuffleTips">🔀 Mostrar otros consejos</button>
+    </section>
+
+  </main>
+
+  <!-- ===== Navegación inferior ===== -->
+  <nav class="bottom-nav">
+    <button class="nav-btn active" data-goto="home"><span>🏠</span><small>Inicio</small></button>
+    <button class="nav-btn" data-goto="finance"><span>💰</span><small>Finanzas</small></button>
+    <button class="nav-btn" data-goto="inventory"><span>📦</span><small>Inventario</small></button>
+    <button class="nav-btn" data-goto="sections"><span>🗂️</span><small>Secciones</small></button>
+    <button class="nav-btn" data-goto="tips"><span>💡</span><small>Consejos</small></button>
+  </nav>
+
+  <!-- ===== Modal genérico ===== -->
+  <div class="modal-overlay" id="modalOverlay" hidden>
+    <div class="modal" role="dialog" aria-modal="true">
+      <div class="modal-head">
+        <h3 id="modalTitle">Título</h3>
+        <button class="modal-close" id="modalClose" aria-label="Cerrar">✕</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <!-- ===== Toast ===== -->
+  <div class="toast" id="toast" hidden></div>
+
+  <!-- ===== Scripts ===== -->
+  <script src="js/db.js"></script>
+  <script src="js/tips-data.js"></script>
+  <script src="js/finance.js"></script>
+  <script src="js/inventory.js"></script>
+  <script src="js/sections.js"></script>
+  <script src="js/tips.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
