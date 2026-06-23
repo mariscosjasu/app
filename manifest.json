@@ -1,14 +1,19 @@
 {
+  "id": "/app/",
   "name": "El sazón de JASU",
   "short_name": "JASU",
-  "description": "Gestión local del negocio: finanzas, inventario, recordatorios y consejos. Funciona sin internet.",
+  "description": "Gestión local del negocio de comida: finanzas, inventario, recordatorios y consejos. Funciona sin internet y guarda los datos en el dispositivo.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "orientation": "portrait",
   "background_color": "#fff7ed",
   "theme_color": "#e8590c",
   "lang": "es",
+  "dir": "ltr",
+  "categories": ["business", "food", "productivity", "finance"],
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "icons/icon.svg",
@@ -20,13 +25,64 @@
       "src": "icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshots/screenshot-mobile.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Pantalla de inicio con balance e inventario"
+    },
+    {
+      "src": "screenshots/screenshot-wide.png",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Panel de la aplicación en escritorio"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Registrar venta",
+      "short_name": "Venta",
+      "description": "Registrar un ingreso rápidamente",
+      "url": "./index.html?action=income",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Registrar gasto",
+      "short_name": "Gasto",
+      "description": "Registrar una salida de dinero",
+      "url": "./index.html?action=expense",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Inventario",
+      "short_name": "Inventario",
+      "description": "Ver y ajustar el inventario",
+      "url": "./index.html?view=inventory",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     }
   ]
 }

@@ -106,6 +106,7 @@ const App = (() => {
 
   function afterUnlock() {
     renderHome();
+    handleLaunchParams();
   }
 
   /* ---------- Pantalla de inicio (resumen) ---------- */
@@ -186,12 +187,23 @@ const App = (() => {
     });
 
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('service-worker.js').catch((err) => {
-          console.warn('No se pudo registrar el Service Worker:', err);
-        });
+      // Registro inmediato (mejor detección por PWABuilder y disponibilidad offline)
+      navigator.serviceWorker.register('service-worker.js').catch((err) => {
+        console.warn('No se pudo registrar el Service Worker:', err);
       });
     }
+  }
+
+  /* ---------- Accesos directos del manifest (?action / ?view) ---------- */
+  function handleLaunchParams() {
+    let p;
+    try { p = new URLSearchParams(location.search); } catch (e) { return; }
+    const view = p.get('view');
+    const action = p.get('action');
+    const validViews = ['finance', 'inventory', 'sections', 'tips', 'settings'];
+    if (action === 'income') { goto('finance'); setTimeout(() => Finance.openForm('income'), 80); return; }
+    if (action === 'expense') { goto('finance'); setTimeout(() => Finance.openForm('expense'), 80); return; }
+    if (view && validViews.includes(view)) goto(view);
   }
 
   /* ---------- Arranque ---------- */
@@ -234,6 +246,7 @@ const App = (() => {
 
     // Bloqueo: si hay PIN configurado, mostrar pantalla de bloqueo
     if (Lock.isEnabled()) Lock.show();
+    else handleLaunchParams();
   }
 
   return { start, goto, openModal, closeModal, toast, money, refresh, renderHome, renderNav, applyBranding, afterUnlock };

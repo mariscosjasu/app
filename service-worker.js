@@ -1,7 +1,7 @@
 /* Service Worker — El sazón de JASU
    Cachea la app para que funcione 100% offline. */
 
-const CACHE = 'jasu-cache-v2';
+const CACHE = 'jasu-cache-v3';
 const ASSETS = [
   './',
   './index.html',
@@ -16,7 +16,11 @@ const ASSETS = [
   './js/lock.js',
   './js/settings.js',
   './js/app.js',
-  './icons/icon.svg'
+  './icons/icon.svg',
+  './icons/icon-192.png',
+  './icons/icon-512.png',
+  './screenshots/screenshot-mobile.png',
+  './screenshots/screenshot-wide.png'
 ];
 
 // Instalación: precachea los archivos base
