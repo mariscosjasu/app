@@ -1,7 +1,7 @@
 /* Service Worker — El sazón de JASU
    Cachea la app para que funcione 100% offline. */
 
-const CACHE = 'jasu-cache-v3';
+const CACHE = 'jasu-cache-v4';
 const ASSETS = [
   './',
   './index.html',
@@ -23,10 +23,12 @@ const ASSETS = [
   './screenshots/screenshot-wide.png'
 ];
 
-// Instalación: precachea los archivos base
+// Instalación: precachea los archivos base (tolerante a fallos individuales)
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE).then((cache) => cache.addAll(ASSETS)).then(() => self.skipWaiting())
+    caches.open(CACHE)
+      .then((cache) => Promise.allSettled(ASSETS.map((url) => cache.add(url))))
+      .then(() => self.skipWaiting())
   );
 });
 
