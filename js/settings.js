@@ -12,7 +12,6 @@ const Settings = (() => {
     if (!root) return;
     const s = DB.settings.get();
     root.innerHTML = '';
-    root.appendChild(cardBusiness(s));
     root.appendChild(cardModules(s));
     root.appendChild(cardSections());
     root.appendChild(cardSecurity(s));
@@ -26,32 +25,14 @@ const Settings = (() => {
     return c;
   }
 
-  /* ---------- 1. Negocio ---------- */
-  function cardBusiness(s) {
-    const c = card('🏪 Negocio', 'El nombre aparece en el encabezado de la app.');
-    const wrap = document.createElement('div');
-    wrap.className = 'field';
-    wrap.innerHTML = `
-      <label>Nombre del negocio</label>
-      <div class="inline-row">
-        <input type="text" id="setBizName" value="${attr(s.businessName)}" />
-        <button class="btn btn-primary" id="setBizSave">Guardar</button>
-      </div>`;
-    c.appendChild(wrap);
-    wrap.querySelector('#setBizSave').onclick = () => {
-      const name = wrap.querySelector('#setBizName').value.trim() || 'El sazón de JASU';
-      DB.settings.set({ businessName: name });
-      App.applyBranding();
-      App.toast('✅ Nombre actualizado');
-    };
-    return c;
-  }
+  /* ---------- 1. Negocio (removido por preferencia del usuario) ---------- */
 
   /* ---------- 2. Módulos ---------- */
   function cardModules(s) {
-    const c = card('🧩 Módulos', 'Muestra u oculta, renombra y reordena las secciones fijas de la barra inferior.');
+    const c = card('🧩 Módulos', 'Muestra u oculta, renombra, reordena y crea módulos para la barra inferior.');
     const icons = { finance: '💰', inventory: '📦', sections: '🗂️', tips: '💡' };
     s.modules.forEach((m, idx) => {
+      const emoji = m.custom ? (m.emoji || '🗂️') : (icons[m.key] || '•');
       const row = document.createElement('div');
       row.className = 'module-row';
       row.innerHTML = `
@@ -59,14 +40,22 @@ const Settings = (() => {
           <button class="dyn-icon-btn" data-up="${idx}" ${idx === 0 ? 'disabled' : ''}>▲</button>
           <button class="dyn-icon-btn" data-down="${idx}" ${idx === s.modules.length - 1 ? 'disabled' : ''}>▼</button>
         </div>
-        <span class="module-emoji">${icons[m.key] || '•'}</span>
+        <span class="module-emoji">${emoji}</span>
         <input type="text" class="module-name" data-name="${idx}" value="${attr(m.label)}" />
+        ${m.custom ? `<button class="dyn-icon-btn" data-delmod="${m.key}" title="Eliminar módulo">🗑️</button>` : ''}
         <label class="switch">
           <input type="checkbox" data-vis="${idx}" ${m.visible ? 'checked' : ''} />
           <span class="slider"></span>
         </label>`;
       c.appendChild(row);
     });
+
+    const addBtn = document.createElement('button');
+    addBtn.className = 'btn btn-primary full';
+    addBtn.style.marginTop = '12px';
+    addBtn.textContent = '+ Agregar módulo';
+    addBtn.onclick = openAddModule;
+    c.appendChild(addBtn);
 
     // Handlers
     c.querySelectorAll('[data-up]').forEach((b) => {
@@ -93,7 +82,69 @@ const Settings = (() => {
         App.renderNav();
       };
     });
+    c.querySelectorAll('[data-delmod]').forEach((b) => {
+      b.onclick = () => {
+        const key = b.dataset.delmod;
+        if (confirm('¿Eliminar este módulo y todas sus secciones?')) {
+          const mods = DB.settings.get().modules.filter((m) => m.key !== key);
+          DB.settings.setModules(mods);
+          DB.sections.removeByModule(key);
+          App.renderNav();
+          App.toast('Módulo eliminado');
+          App.goto('home');
+        }
+      };
+    });
     return c;
+  }
+
+  /* ---------- Agregar módulo nuevo ---------- */
+  const MODULE_EMOJIS = ['🗂️', '📒', '🧾', '👥', '🍽️', '📦', '🚚', '📞', '⭐', '🎯', '🧰', '📅'];
+  function openAddModule() {
+    const body = document.createElement('div');
+    body.innerHTML = `
+      <form id="modForm">
+        <div class="field">
+          <label>Ícono</label>
+          <div class="emoji-row" id="modEmojiRow">
+            ${MODULE_EMOJIS.map((e, i) => `<button type="button" class="emoji-pick ${i === 0 ? 'sel' : ''}" data-emoji="${e}">${e}</button>`).join('')}
+          </div>
+        </div>
+        <div class="field">
+          <label>Nombre del módulo</label>
+          <input type="text" id="modName" placeholder="Ej. Proveedores, Recetas, Pedidos…" required autofocus />
+        </div>
+        <p class="settings-hint">Aparecerá como una pestaña nueva en la barra inferior, donde podrás crear listas y recordatorios.</p>
+        <div class="form-actions">
+          <button type="button" class="btn btn-ghost" id="modCancel">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Crear módulo</button>
+        </div>
+      </form>`;
+    App.openModal('🧩 Nuevo módulo', body);
+
+    let emoji = MODULE_EMOJIS[0];
+    body.querySelectorAll('[data-emoji]').forEach((b) => {
+      b.onclick = () => {
+        emoji = b.dataset.emoji;
+        body.querySelectorAll('.emoji-pick').forEach((x) => x.classList.remove('sel'));
+        b.classList.add('sel');
+      };
+    });
+
+    body.querySelector('#modCancel').onclick = App.closeModal;
+    body.querySelector('#modForm').onsubmit = (e) => {
+      e.preventDefault();
+      const label = body.querySelector('#modName').value.trim();
+      if (!label) { App.toast('Escribe un nombre'); return; }
+      const mods = DB.settings.get().modules;
+      const key = 'custom-' + DB.uid();
+      mods.push({ key, label, emoji, visible: true, custom: true });
+      DB.settings.setModules(mods);
+      App.closeModal();
+      App.renderNav();
+      App.toast('✅ Módulo creado');
+      App.goto(key);
+    };
   }
 
   function moveModule(idx, dir) {
@@ -108,8 +159,8 @@ const Settings = (() => {
 
   /* ---------- 3. Mis secciones ---------- */
   function cardSections() {
-    const c = card('🗂️ Mis secciones', 'Renombra, reordena o elimina tus secciones personalizadas.');
-    const list = DB.sections.all();
+    const c = card('🗂️ Mis secciones', 'Renombra, reordena o elimina las secciones del módulo "Secciones".');
+    const list = DB.sections.byModule(null);
     if (!list.length) {
       const p = document.createElement('p');
       p.className = 'empty-hint';
@@ -135,7 +186,7 @@ const Settings = (() => {
     addBtn.className = 'btn btn-primary full';
     addBtn.style.marginTop = '10px';
     addBtn.textContent = '+ Nueva sección';
-    addBtn.onclick = () => Sections.openForm();
+    addBtn.onclick = () => Sections.openForm(null);
     c.appendChild(addBtn);
 
     c.querySelectorAll('[data-secup]').forEach((b) => {

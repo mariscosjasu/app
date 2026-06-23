@@ -6,8 +6,12 @@
 const Sections = (() => {
   const EMOJIS = ['📝', '🛒', '⏰', '📋', '💡', '🍽️', '📦', '🧹', '💳', '📞', '⭐', '🎯'];
 
+  // Contexto activo: en qué módulo y contenedor se está mostrando
+  let ctx = { moduleId: null, containerId: 'sectionsWrap' };
+
   /* ---------- Formulario nueva sección ---------- */
-  function openForm() {
+  function openForm(moduleId) {
+    const targetModule = moduleId !== undefined ? moduleId : ctx.moduleId;
     const body = document.createElement('div');
     body.innerHTML = `
       <form id="secForm">
@@ -43,7 +47,7 @@ const Sections = (() => {
       e.preventDefault();
       const title = body.querySelector('#secTitle').value.trim();
       if (!title) { App.toast('Escribe un nombre'); return; }
-      DB.sections.add({ title, emoji });
+      DB.sections.add({ title, emoji, moduleId: targetModule || null });
       App.closeModal();
       App.toast('✅ Sección creada');
       render();
@@ -123,13 +127,16 @@ const Sections = (() => {
   }
 
   /* ---------- Render ---------- */
-  function render() {
-    const wrap = document.getElementById('sectionsWrap');
+  function render(moduleId, containerId) {
+    if (moduleId !== undefined) ctx.moduleId = moduleId;
+    if (containerId) ctx.containerId = containerId;
+
+    const wrap = document.getElementById(ctx.containerId);
     if (!wrap) return;
-    const list = DB.sections.all();
+    const list = DB.sections.byModule(ctx.moduleId);
 
     if (!list.length) {
-      wrap.innerHTML = `<div class="empty-state"><span class="es-emoji">🗂️</span><p>Aún no tienes secciones.<br>Crea una para organizar pendientes o recordatorios.</p></div>`;
+      wrap.innerHTML = `<div class="empty-state"><span class="es-emoji">🗂️</span><p>Aún no tienes secciones aquí.<br>Crea una para organizar pendientes o recordatorios.</p></div>`;
       return;
     }
 
@@ -239,7 +246,7 @@ const Sections = (() => {
 
   function init() {
     const btn = document.getElementById('openSectionForm');
-    if (btn) btn.onclick = openForm;
+    if (btn) btn.onclick = () => openForm(null);
   }
 
   return { init, render, openForm, openEdit };

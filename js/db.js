@@ -140,14 +140,23 @@ const DB = (() => {
         id: uid(),
         title: (sec.title || '').trim(),
         emoji: sec.emoji || '📝',
+        moduleId: sec.moduleId || null,
         items: []
       };
       list.push(item);
       write(KEYS.sections, list);
       return item;
     },
+    byModule(moduleId) {
+      const mid = moduleId || null;
+      return read(KEYS.sections, []).filter((s) => (s.moduleId || null) === mid);
+    },
     remove(id) {
       write(KEYS.sections, read(KEYS.sections, []).filter((s) => s.id !== id));
+    },
+    removeByModule(moduleId) {
+      const mid = moduleId || null;
+      write(KEYS.sections, read(KEYS.sections, []).filter((s) => (s.moduleId || null) !== mid));
     },
     addItem(sectionId, text) {
       const list = read(KEYS.sections, []);
@@ -183,9 +192,14 @@ const DB = (() => {
       const list = read(KEYS.sections, []);
       const idx = list.findIndex((s) => s.id === id);
       if (idx === -1) return;
-      const ni = idx + dir;
-      if (ni < 0 || ni >= list.length) return;
-      [list[idx], list[ni]] = [list[ni], list[idx]];
+      const mid = list[idx].moduleId || null;
+      // Reordenar solo entre secciones del mismo módulo
+      const sameIdx = list.map((s, i) => ((s.moduleId || null) === mid ? i : -1)).filter((i) => i >= 0);
+      const pos = sameIdx.indexOf(idx);
+      const target = pos + dir;
+      if (target < 0 || target >= sameIdx.length) return;
+      const j = sameIdx[target];
+      [list[idx], list[j]] = [list[j], list[idx]];
       write(KEYS.sections, list);
     },
     editItem(sectionId, itemId, text) {
@@ -213,6 +227,7 @@ const DB = (() => {
       savedMods.forEach((m) => {
         const def = known.find((k) => k.key === m.key);
         if (def) result.push({ ...def, ...m });
+        else if (m.custom) result.push({ ...m }); // módulos personalizados creados por el usuario
       });
       known.forEach((k) => {
         if (!result.find((r) => r.key === k.key)) result.push({ ...k });

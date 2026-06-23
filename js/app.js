@@ -36,20 +36,34 @@ const App = (() => {
   /* ---------- Navegación entre vistas ---------- */
   function goto(view) {
     currentView = view;
+    const isCustom = typeof view === 'string' && view.startsWith('custom-');
     document.querySelectorAll('.view').forEach((v) => {
-      v.classList.toggle('active', v.dataset.view === view);
+      const match = isCustom ? v.dataset.view === 'custom' : v.dataset.view === view;
+      v.classList.toggle('active', match);
     });
     document.querySelectorAll('.nav-btn').forEach((b) => {
       b.classList.toggle('active', b.dataset.goto === view);
     });
     // Re-render de la vista que se abre
     if (view === 'home') renderHome();
-    if (view === 'finance') Finance.render();
-    if (view === 'inventory') Inventory.render();
-    if (view === 'sections') Sections.render();
-    if (view === 'tips') Tips.render();
-    if (view === 'settings') Settings.render();
+    else if (view === 'finance') Finance.render();
+    else if (view === 'inventory') Inventory.render();
+    else if (view === 'sections') Sections.render(null, 'sectionsWrap');
+    else if (view === 'tips') Tips.render();
+    else if (view === 'settings') Settings.render();
+    else if (isCustom) renderCustom(view);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /* ---------- Render de un módulo personalizado ---------- */
+  function renderCustom(key) {
+    const mod = DB.settings.get().modules.find((m) => m.key === key);
+    if (!mod) { goto('home'); return; }
+    const titleEl = document.getElementById('customTitle');
+    if (titleEl) titleEl.textContent = `${mod.emoji || '🗂️'} ${mod.label}`;
+    const addBtn = document.getElementById('openCustomSectionForm');
+    if (addBtn) addBtn.onclick = () => Sections.openForm(key);
+    Sections.render(key, 'customWrap');
   }
 
   /* ---------- Barra de navegación dinámica ---------- */
@@ -59,13 +73,15 @@ const App = (() => {
     const nav = document.getElementById('bottomNav');
     if (!nav) return;
     const s = DB.settings.get();
-    const items = [{ key: 'home', label: 'Inicio' }];
-    s.modules.forEach((m) => { if (m.visible) items.push({ key: m.key, label: m.label }); });
-    items.push({ key: 'settings', label: 'Ajustes' });
+    const items = [{ key: 'home', label: 'Inicio', icon: NAV_ICONS.home }];
+    s.modules.forEach((m) => {
+      if (m.visible) items.push({ key: m.key, label: m.label, icon: m.custom ? (m.emoji || '🗂️') : NAV_ICONS[m.key] });
+    });
+    items.push({ key: 'settings', label: 'Ajustes', icon: NAV_ICONS.settings });
 
     nav.innerHTML = items.map((it) => `
       <button class="nav-btn ${it.key === currentView ? 'active' : ''}" data-goto="${it.key}">
-        <span>${NAV_ICONS[it.key] || '•'}</span><small>${Finance.escapeHtml(it.label)}</small>
+        <span>${it.icon || '•'}</span><small>${Finance.escapeHtml(it.label)}</small>
       </button>`).join('');
 
     nav.querySelectorAll('[data-goto]').forEach((b) => {
@@ -80,7 +96,7 @@ const App = (() => {
     const h1 = document.querySelector('.brand-text h1');
     if (h1) h1.textContent = name;
     document.title = name;
-    // Nombres de los módulos en los títulos de cada vista
+    // Nombres de los módulos fijos en los títulos de cada vista
     s.modules.forEach((m) => {
       const el = document.getElementById('title-' + m.key);
       if (el) el.textContent = `${NAV_ICONS[m.key] || ''} ${m.label}`.trim();
