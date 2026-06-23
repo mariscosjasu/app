@@ -449,3 +449,37 @@ body.locked { overflow: hidden; }
 .lock-pin-input:focus { outline: none; border-color: var(--orange-light); box-shadow: 0 0 0 3px rgba(251,146,60,.15); }
 .lock-error { color: var(--red); font-size: 13px; }
 .lock-alt { background: none; border: none; color: var(--orange); font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 16px; }
+
+
+/* ============================================================
+   Notas por módulo
+   ============================================================ */
+.notes-container { margin-top: 18px; }
+.notes-panel {
+  background: var(--surface); border-radius: var(--radius); padding: 14px;
+  box-shadow: var(--shadow); border: 1px dashed var(--line);
+}
+.notes-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.notes-title { font-weight: 700; font-size: 15px; }
+.notes-add {
+  border: none; background: var(--orange-soft); color: var(--orange); font-weight: 700;
+  border-radius: 999px; padding: 7px 14px; font-size: 13px; cursor: pointer;
+}
+.notes-add:active { transform: scale(.96); }
+.notes-list { display: flex; flex-direction: column; gap: 8px; }
+.note-card {
+  width: 100%; text-align: left; background: var(--bg); border: 1px solid var(--line);
+  border-radius: 12px; padding: 11px 12px; cursor: pointer; display: flex; flex-direction: column; gap: 6px;
+  font-family: var(--font);
+}
+.note-card:active { transform: scale(.99); }
+.note-text { font-size: 14px; color: var(--text); line-height: 1.4; white-space: pre-wrap; word-break: break-word; }
+.note-meta { font-size: 11.5px; color: var(--text-soft); display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.note-rem { background: #e7f5ff; color: var(--blue); padding: 2px 8px; border-radius: 999px; font-weight: 600; }
+.note-rem.overdue { background: var(--red-soft); color: var(--red); }
+.note-dates { background: var(--bg); border-radius: 10px; padding: 10px 12px; line-height: 1.5; }
+
+/* Fila con interruptor (en modal de nota) */
+.switch-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.switch-row > span:first-child { font-size: 15px; font-weight: 600; }
+textarea { resize: vertical; }

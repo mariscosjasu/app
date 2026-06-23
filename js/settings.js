@@ -14,6 +14,7 @@ const Settings = (() => {
     root.innerHTML = '';
     root.appendChild(cardModules(s));
     root.appendChild(cardSections());
+    root.appendChild(cardNotes(s));
     root.appendChild(cardSecurity(s));
     root.appendChild(cardBackup());
   }
@@ -85,16 +86,63 @@ const Settings = (() => {
     c.querySelectorAll('[data-delmod]').forEach((b) => {
       b.onclick = () => {
         const key = b.dataset.delmod;
-        if (confirm('¿Eliminar este módulo y todas sus secciones?')) {
+        if (confirm('¿Eliminar este módulo, sus secciones y sus notas?')) {
           const mods = DB.settings.get().modules.filter((m) => m.key !== key);
           DB.settings.setModules(mods);
           DB.sections.removeByModule(key);
+          DB.notes.removeByModule(key);
           App.renderNav();
           App.toast('Módulo eliminado');
           App.goto('home');
         }
       };
     });
+    return c;
+  }
+
+  /* ---------- 3b. Notas (activar/desactivar por módulo) ---------- */
+  function cardNotes(s) {
+    const c = card('📝 Notas', 'Activa o desactiva el recuadro de notas en cada módulo.');
+    const icons = { finance: '💰', inventory: '📦', sections: '🗂️', tips: '💡' };
+    s.modules.forEach((m, idx) => {
+      const emoji = m.custom ? (m.emoji || '🗂️') : (icons[m.key] || '•');
+      const row = document.createElement('div');
+      row.className = 'module-row';
+      row.innerHTML = `
+        <span class="module-emoji">${emoji}</span>
+        <span class="module-name-static">${Finance.escapeHtml(m.label)}</span>
+        <label class="switch"><input type="checkbox" data-notes="${idx}" ${m.notes !== false ? 'checked' : ''}/><span class="slider"></span></label>`;
+      c.appendChild(row);
+    });
+
+    const notif = document.createElement('div');
+    notif.style.marginTop = '12px';
+    const perm = Notify.supported() ? Notify.permission() : 'unsupported';
+    if (perm === 'granted') {
+      notif.innerHTML = `<div class="lock-status ok">🔔 Notificaciones activadas</div>`;
+    } else if (perm === 'unsupported') {
+      notif.innerHTML = `<p class="settings-hint">Este navegador no soporta notificaciones del sistema.</p>`;
+    } else {
+      notif.innerHTML = `<button class="btn btn-ghost full" id="enableNotif">🔔 Activar notificaciones</button>
+        <p class="settings-hint">Necesario para que lleguen los recordatorios de las notas.</p>`;
+    }
+    c.appendChild(notif);
+
+    c.querySelectorAll('[data-notes]').forEach((chk) => {
+      chk.onchange = () => {
+        const i = parseInt(chk.dataset.notes, 10);
+        const mods = DB.settings.get().modules;
+        mods[i].notes = chk.checked;
+        DB.settings.setModules(mods);
+        App.renderActiveNotes();
+      };
+    });
+    const enableBtn = notif.querySelector('#enableNotif');
+    if (enableBtn) enableBtn.onclick = async () => {
+      const p = await Notify.requestPermission();
+      App.toast(p === 'granted' ? '🔔 Notificaciones activadas' : 'No se activaron las notificaciones');
+      render();
+    };
     return c;
   }
 
@@ -138,7 +186,7 @@ const Settings = (() => {
       if (!label) { App.toast('Escribe un nombre'); return; }
       const mods = DB.settings.get().modules;
       const key = 'custom-' + DB.uid();
-      mods.push({ key, label, emoji, visible: true, custom: true });
+      mods.push({ key, label, emoji, visible: true, custom: true, notes: true });
       DB.settings.setModules(mods);
       App.closeModal();
       App.renderNav();

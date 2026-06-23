@@ -46,13 +46,23 @@ const App = (() => {
     });
     // Re-render de la vista que se abre
     if (view === 'home') renderHome();
-    else if (view === 'finance') Finance.render();
-    else if (view === 'inventory') Inventory.render();
-    else if (view === 'sections') Sections.render(null, 'sectionsWrap');
-    else if (view === 'tips') Tips.render();
+    else if (view === 'finance') { Finance.render(); Notes.render('finance', 'notes-finance'); }
+    else if (view === 'inventory') { Inventory.render(); Notes.render('inventory', 'notes-inventory'); }
+    else if (view === 'sections') { Sections.render(null, 'sectionsWrap'); Notes.render('sections', 'notes-sections'); }
+    else if (view === 'tips') { Tips.render(); Notes.render('tips', 'notes-tips'); }
     else if (view === 'settings') Settings.render();
     else if (isCustom) renderCustom(view);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /* ---------- Re-render de las notas del módulo activo ---------- */
+  function renderActiveNotes() {
+    const v = currentView;
+    if (v === 'finance') Notes.render('finance', 'notes-finance');
+    else if (v === 'inventory') Notes.render('inventory', 'notes-inventory');
+    else if (v === 'sections') Notes.render('sections', 'notes-sections');
+    else if (v === 'tips') Notes.render('tips', 'notes-tips');
+    else if (typeof v === 'string' && v.startsWith('custom-')) Notes.render(v, 'notes-custom');
   }
 
   /* ---------- Render de un módulo personalizado ---------- */
@@ -64,6 +74,7 @@ const App = (() => {
     const addBtn = document.getElementById('openCustomSectionForm');
     if (addBtn) addBtn.onclick = () => Sections.openForm(key);
     Sections.render(key, 'customWrap');
+    Notes.render(key, 'notes-custom');
   }
 
   /* ---------- Barra de navegación dinámica ---------- */
@@ -234,6 +245,8 @@ const App = (() => {
     Inventory.init();
     Sections.init();
     Tips.init();
+    Notes.init();
+    Notify.init();
     Settings.init();
     Lock.init();
 
@@ -247,9 +260,12 @@ const App = (() => {
     // Bloqueo: si hay PIN configurado, mostrar pantalla de bloqueo
     if (Lock.isEnabled()) Lock.show();
     else handleLaunchParams();
+
+    // Vigilante de recordatorios (avisos mientras la app está abierta)
+    Notify.startWatcher();
   }
 
-  return { start, goto, openModal, closeModal, toast, money, refresh, renderHome, renderNav, applyBranding, afterUnlock };
+  return { start, goto, openModal, closeModal, toast, money, refresh, renderHome, renderNav, applyBranding, afterUnlock, renderActiveNotes };
 })();
 
 document.addEventListener('DOMContentLoaded', App.start);

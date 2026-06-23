@@ -1,7 +1,7 @@
 /* Service Worker — El sazón de JASU
    Cachea la app para que funcione 100% offline. */
 
-const CACHE = 'jasu-cache-v4';
+const CACHE = 'jasu-cache-v5';
 const ASSETS = [
   './',
   './index.html',
@@ -13,6 +13,8 @@ const ASSETS = [
   './js/inventory.js',
   './js/sections.js',
   './js/tips.js',
+  './js/notify.js',
+  './js/notes.js',
   './js/lock.js',
   './js/settings.js',
   './js/app.js',
@@ -56,6 +58,19 @@ self.addEventListener('fetch', (event) => {
           })
           .catch(() => cached)
       );
+    })
+  );
+});
+
+// Al tocar una notificación de recordatorio: enfocar o abrir la app
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((wins) => {
+      for (const w of wins) {
+        if ('focus' in w) return w.focus();
+      }
+      if (self.clients.openWindow) return self.clients.openWindow('./index.html');
     })
   );
 });

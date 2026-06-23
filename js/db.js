@@ -11,6 +11,7 @@ const DB = (() => {
     transactions: PREFIX + 'transactions',
     ingredients: PREFIX + 'ingredients',
     sections: PREFIX + 'sections',
+    notes: PREFIX + 'notes',
     settings: PREFIX + 'settings',
     seeded: PREFIX + 'seeded'
   };
@@ -19,10 +20,10 @@ const DB = (() => {
   const DEFAULT_SETTINGS = {
     businessName: 'El sazón de JASU',
     modules: [
-      { key: 'finance', label: 'Finanzas', visible: true },
-      { key: 'inventory', label: 'Inventario', visible: true },
-      { key: 'sections', label: 'Secciones', visible: true },
-      { key: 'tips', label: 'Consejos', visible: true }
+      { key: 'finance', label: 'Finanzas', visible: true, notes: true },
+      { key: 'inventory', label: 'Inventario', visible: true, notes: true },
+      { key: 'sections', label: 'Secciones', visible: true, notes: true },
+      { key: 'tips', label: 'Consejos', visible: true, notes: true }
     ],
     security: { pinHash: null, biometric: false, credentialId: null }
   };
@@ -254,6 +255,61 @@ const DB = (() => {
     }
   };
 
+  /* ===================== NOTAS (por módulo) ===================== */
+  const notes = {
+    all() {
+      return read(KEYS.notes, []);
+    },
+    byModule(moduleKey) {
+      return read(KEYS.notes, [])
+        .filter((n) => n.moduleKey === moduleKey)
+        .sort((a, b) => b.createdAt - a.createdAt);
+    },
+    add(n) {
+      const list = read(KEYS.notes, []);
+      const item = {
+        id: uid(),
+        moduleKey: n.moduleKey,
+        text: (n.text || '').trim(),
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        reminder: n.reminder || null,
+        reminderNotified: false
+      };
+      list.push(item);
+      write(KEYS.notes, list);
+      return item;
+    },
+    update(id, patch) {
+      const list = read(KEYS.notes, []);
+      const n = list.find((x) => x.id === id);
+      if (!n) return null;
+      if (patch.text !== undefined) n.text = String(patch.text).trim();
+      if (patch.reminder !== undefined) {
+        n.reminder = patch.reminder || null;
+        n.reminderNotified = false;
+      }
+      n.updatedAt = Date.now();
+      write(KEYS.notes, list);
+      return n;
+    },
+    markNotified(id) {
+      const list = read(KEYS.notes, []);
+      const n = list.find((x) => x.id === id);
+      if (n) { n.reminderNotified = true; write(KEYS.notes, list); }
+    },
+    remove(id) {
+      write(KEYS.notes, read(KEYS.notes, []).filter((n) => n.id !== id));
+    },
+    removeByModule(moduleKey) {
+      write(KEYS.notes, read(KEYS.notes, []).filter((n) => n.moduleKey !== moduleKey));
+    },
+    dueReminders() {
+      const now = Date.now();
+      return read(KEYS.notes, []).filter((n) => n.reminder && !n.reminderNotified && n.reminder <= now);
+    }
+  };
+
   /* ===================== DATOS DE EJEMPLO (primera vez) ===================== */
   function seedIfEmpty() {
     if (read(KEYS.seeded, false)) return;
@@ -291,6 +347,7 @@ const DB = (() => {
       transactions: read(KEYS.transactions, []),
       ingredients: read(KEYS.ingredients, []),
       sections: read(KEYS.sections, []),
+      notes: read(KEYS.notes, []),
       settings: read(KEYS.settings, null),
       exportedAt: Date.now()
     }, null, 2);
@@ -302,15 +359,16 @@ const DB = (() => {
     if (Array.isArray(data.transactions)) write(KEYS.transactions, data.transactions);
     if (Array.isArray(data.ingredients)) write(KEYS.ingredients, data.ingredients);
     if (Array.isArray(data.sections)) write(KEYS.sections, data.sections);
+    if (Array.isArray(data.notes)) write(KEYS.notes, data.notes);
     if (data.settings && typeof data.settings === 'object') write(KEYS.settings, data.settings);
     write(KEYS.seeded, true);
     return true;
   }
 
   function resetAll() {
-    [KEYS.transactions, KEYS.ingredients, KEYS.sections, KEYS.settings, KEYS.seeded]
+    [KEYS.transactions, KEYS.ingredients, KEYS.sections, KEYS.notes, KEYS.settings, KEYS.seeded]
       .forEach((k) => localStorage.removeItem(k));
   }
 
-  return { KEYS, uid, transactions, ingredients, sections, settings, seedIfEmpty, exportAll, importAll, resetAll };
+  return { KEYS, uid, transactions, ingredients, sections, notes, settings, seedIfEmpty, exportAll, importAll, resetAll };
 })();
